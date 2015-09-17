@@ -1,5 +1,6 @@
 package com.healthcloud.qa.test;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -34,6 +35,7 @@ import com.healthcloud.qa.utils.DataWriter;
 import com.healthcloud.qa.utils.HTTPReqGen;
 import com.healthcloud.qa.utils.RecordHandler;
 import com.healthcloud.qa.utils.SheetUtils;
+import com.healthcloud.qa.utils.StringUtil;
 import com.jayway.restassured.response.Response;
 
 public class HTTPReqGenTest implements ITest {
@@ -47,7 +49,9 @@ public class HTTPReqGenTest implements ITest {
         return "API Test";
     }
     
-    String filePath = "";
+   private String userDir = System.getProperty("user.dir");
+   String filePath = "";
+   String templatePath =  userDir + File.separator + "http_request_template.txt";
     
     XSSFWorkbook wb = null;
     XSSFSheet inputSheet = null;
@@ -66,6 +70,7 @@ public class HTTPReqGenTest implements ITest {
     @Parameters("workBook")
     public void setup(String path) {
         filePath = path;
+     
         try {
             wb = new XSSFWorkbook(new FileInputStream(filePath));
         } catch (FileNotFoundException e) {
@@ -83,9 +88,9 @@ public class HTTPReqGenTest implements ITest {
         comparsionSheet = wb.createSheet("Comparison");
         resultSheet = wb.createSheet("Result");
 
-        try {
-            InputStream is = HTTPReqGenTest.class.getClassLoader().getResourceAsStream("http_request_template.txt");
-            template = IOUtils.toString(is, Charset.defaultCharset());
+        try {    	   
+               FileInputStream fis = new FileInputStream(new File(templatePath));
+        	   template = IOUtils.toString(fis, Charset.defaultCharset());
         } catch (Exception e) {
             Assert.fail("Problem fetching data from input file:" + e.getMessage());
         }
@@ -100,7 +105,6 @@ public class HTTPReqGenTest implements ITest {
         List<Object[]> test_IDs = new ArrayList<Object[]>();
 
             myInputData = new DataReader(inputSheet, true, true, 0);
-            Map<String, RecordHandler> myInput = myInputData.get_map();
 
             // sort map in order so that test cases ran in a fixed order
             Map<String, RecordHandler> sortmap = new TreeMap<String,RecordHandler>(new Comparator<String>(){
@@ -111,9 +115,8 @@ public class HTTPReqGenTest implements ITest {
             	
             });
             
-            sortmap.putAll(myInput);
-            
-            //Utils.sortmap(myInput);
+            sortmap.putAll(myInputData.get_map());
+           
             
             for (Map.Entry<String, RecordHandler> entry : sortmap.entrySet()) {
                 String test_ID = entry.getKey();
@@ -148,9 +151,8 @@ public class HTTPReqGenTest implements ITest {
                 DataWriter.writeData(outputSheet, response.asString(), ID, test_case);
             	//System.out.println(outputSheet.getSheetName() + "\t\t"+response.asString() + "\t\t" + ID+"\t\t"+test_case);
                 
-               // JSONCompareResult result = JSONCompare.compareJSON(removeSpaces(baseline_message), removeSpaces(response.asString()), JSONCompareMode.NON_EXTENSIBLE);
-                JSONCompareResult result = JSONCompare.compareJSON(baseline_message, response.asString(), JSONCompareMode.NON_EXTENSIBLE);
-                
+                JSONCompareResult result = JSONCompare.compareJSON(StringUtil.removeSpaces(baseline_message), StringUtil.removeSpaces(response.asString()), JSONCompareMode.NON_EXTENSIBLE);
+               
              
                 if (!result.passed()) {
                     DataWriter.writeData(comparsionSheet, result.getMessage(), ID, test_case);

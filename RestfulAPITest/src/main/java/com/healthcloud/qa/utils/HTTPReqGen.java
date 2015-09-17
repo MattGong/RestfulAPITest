@@ -124,7 +124,7 @@ public class HTTPReqGen {
             item = item.substring(2, item.length() - 2);
             
             if( !record.containsKey(item)) {
-              logger.error("Template contained replacement string whose value did not exist in input record:[" + item + "]");
+              logger.info("Template contained replacement string whose value did not exist in input record:[" + item + "]");
             }            
             
             item = record.get(item);
