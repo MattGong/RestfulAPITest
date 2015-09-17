@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+  
+<suite name="HTTPReqGenTestSuite" parallel="false" verbose="1" >
+  <parameter name="workBook" value="./Http_Request_workbook_Data.xlsx" />
+ 
+  <test name="HTTPReqGenTest">
+    <classes>
+      <class name="com.healthcloud.qa.test.HTTPReqGenTest"/>
+    </classes>
+  </test>
+</suite>
